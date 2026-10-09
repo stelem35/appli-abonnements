@@ -150,7 +150,9 @@ function openForm(c = null) {
   const f = $('#cf');
   const hint = () => {
     const d = f.end_date.value ? U.addDays(U.parseYmd(f.end_date.value), -(+f.notice_days.value || 0)) : null;
-    $('#dl-hint').textContent = d ? `Date limite pour résilier : ${U.fmtDate(d)} — l'alerte sera posée dans Google Agenda ce jour-là.` : "Renseigne la fin d'engagement pour créer une alerte.";
+    $('#dl-hint').textContent = !d ? "Renseigne la fin d'engagement pour créer une alerte."
+      : U.daysBetween(new Date(), d) < 0 ? `Date limite pour résilier : ${U.fmtDate(d)} — déjà passée, aucune alerte ne sera créée.`
+      : `Date limite pour résilier : ${U.fmtDate(d)} — l'alerte sera posée dans Google Agenda ce jour-là.`;
   };
   f.end_date.oninput = f.notice_days.oninput = hint; hint();
 
@@ -165,7 +167,9 @@ function openForm(c = null) {
   f.onsubmit = async e => {
     e.preventDefault();
     const fields = read();
-    const needAlert = fields.status !== 'resilie' && !!fields.end_date;
+    const dl = fields.end_date ? GC.deadlineOf(fields) : null;
+    const dlPassed = !!dl && U.daysBetween(new Date(), dl) < 0;
+    const needAlert = fields.status !== 'resilie' && !!dl && !dlPassed;
     const touchesGoogle = needAlert || !!c?.cal_event_id;
     // La fenêtre Google doit s'ouvrir directement sur l'appui : on la lance avant toute autre opération
     let googleOk = true;
@@ -175,6 +179,7 @@ function openForm(c = null) {
     try {
       let saved = await DB.saveContract({ ...fields, id: c?.id });
       let msg = 'Contrat enregistré';
+      if (dlPassed && fields.status !== 'resilie') msg += ' · date limite déjà passée, aucune alerte créée';
       if (touchesGoogle) {
         if (!googleOk) msg += ' (alerte Google non synchronisée : connexion refusée)';
         else try {
