@@ -129,20 +129,25 @@ function openForm(c = null) {
       <label>Montant (€)<input name="amount" type="number" step="0.01" min="0" inputmode="decimal" required value="${c?.amount ?? ''}"></label>
       <label>Fréquence${sel('frequency', { mensuel: 'Mensuel', annuel: 'Annuel' }, c?.frequency || 'mensuel')}</label>
     </div>
-    <label>Catégorie${sel('category', CATS, c?.category || 'autre')}</label>
     <div class="frow">
-      <label>Début<input name="start_date" type="date" value="${c?.start_date || ''}"></label>
-      <label>Fin d'engagement / renouvellement<input name="end_date" type="date" value="${c?.end_date || ''}"></label>
+      <label>Catégorie${sel('category', CATS, c?.category || 'autre')}</label>
+      <label>Statut${sel('status', STATUS, c?.status || 'actif')}</label>
     </div>
     <div class="frow">
+      <label>Fin d'engagement<input name="end_date" type="date" value="${c?.end_date || ''}"></label>
       <label>Préavis (jours)<input name="notice_days" type="number" min="0" inputmode="numeric" value="${c?.notice_days ?? 30}"></label>
-      <label>Alerte Google${sel('alert_days', { 28: '4 semaines avant', 14: '2 semaines avant' }, String(c?.alert_days ?? 28))}</label>
     </div>
     <div class="kv" id="dl-hint"></div>
-    <label>Lien de résiliation<input name="cancel_url" type="url" placeholder="https://…" value="${esc(c?.cancel_url || '')}"></label>
-    <label>Montant cible / offre concurrente (€, même fréquence)<input name="target_amount" type="number" step="0.01" min="0" inputmode="decimal" value="${c?.target_amount ?? ''}"></label>
-    <label>Notes<textarea name="notes" rows="3" placeholder="Conditions, n° de contrat…">${esc(c?.notes || '')}</textarea></label>
-    <label>Statut${sel('status', STATUS, c?.status || 'actif')}</label>
+    <details class="more" ${c && (c.start_date || c.cancel_url || c.target_amount != null || c.notes || (c.alert_days ?? 28) !== 28) ? 'open' : ''}>
+      <summary>Plus de détails</summary>
+      <div class="form">
+        <label>Début<input name="start_date" type="date" value="${c?.start_date || ''}"></label>
+        <label>Alerte Google${sel('alert_days', { 28: '4 semaines avant', 14: '2 semaines avant' }, String(c?.alert_days ?? 28))}</label>
+        <label>Lien de résiliation<input name="cancel_url" type="url" placeholder="https://…" value="${esc(c?.cancel_url || '')}"></label>
+        <label>Montant cible / offre concurrente (€, même fréquence)<input name="target_amount" type="number" step="0.01" min="0" inputmode="decimal" value="${c?.target_amount ?? ''}"></label>
+        <label>Notes<textarea name="notes" rows="3" placeholder="Conditions, n° de contrat…">${esc(c?.notes || '')}</textarea></label>
+      </div>
+    </details>
     <button class="primary" type="submit">${c ? 'Enregistrer' : 'Ajouter'}</button>
     ${c ? '<button class="secondary danger" type="button" id="cf-del">Supprimer ce contrat</button>' : ''}
     <button class="secondary" type="button" data-act="close">Annuler</button>
